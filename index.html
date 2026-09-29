@@ -947,11 +947,123 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
     .stats-strip {
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
       background: #131221;
       border: 1px solid var(--border-purple);
       border-radius: 12px;
       padding: 10px 16px;
       margin-bottom: 14px;
+    }
+
+    /* Laundry & Status Badge */
+    .badge-status {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+      user-select: none;
+      border: 1px solid transparent;
+    }
+
+    .badge-status.available {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.35);
+      color: #86efac;
+    }
+
+    .badge-status.available:hover {
+      background: rgba(34, 197, 94, 0.25);
+    }
+
+    .badge-status.laundry {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #fca5a5;
+    }
+
+    .badge-status.laundry:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    .piece-card.is-laundry {
+      opacity: 0.72;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .piece-card.is-laundry .piece-thumb {
+      filter: grayscale(40%);
+    }
+
+    .piece-usage-info {
+      font-size: 0.65rem;
+      color: #c084fc;
+      opacity: 0.9;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* Fast decision hero button */
+    .btn-hero-fast {
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 14px;
+      padding: 13px 20px;
+      font-weight: 700;
+      font-size: 1rem;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 18px rgba(168, 85, 247, 0.4);
+      transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-hero-fast:hover {
+      filter: brightness(1.12);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(168, 85, 247, 0.55);
+    }
+
+    .btn-hero-fast:active {
+      transform: translateY(0);
+    }
+
+    .season-info-bar {
+      font-size: 0.78rem;
+      color: #d8b4fe;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .fast-reason-banner {
+      background: rgba(147, 51, 234, 0.18);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: #f3e8ff;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      animation: fadeIn 0.2s ease-out;
     }
 
     .stat-badge {
@@ -1002,14 +1114,23 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         <!-- Stats strip -->
         <div class="stats-strip">
           <span class="stat-badge" id="piecesCountLabel">Carregando peças...</span>
+          <span id="laundryCountBadge" style="font-size: 0.75rem; color: #fca5a5;"></span>
         </div>
 
         <!-- Filter bar -->
         <div class="filter-bar">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nome, cor ou estilo...">
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nome, cor, estilo ou ocasião...">
           </div>
+          <!-- Clima / Estação Chips -->
+          <div class="cat-chips-scroll" id="weatherChipsContainer">
+            <button class="cat-chip active" data-action="filter-weather-chip" data-weather="Tudo">Clima: Tudo</button>
+            <button class="cat-chip" data-action="filter-weather-chip" data-weather="calor">🔥 Calor</button>
+            <button class="cat-chip" data-action="filter-weather-chip" data-weather="frio">❄️ Frio</button>
+            <button class="cat-chip" data-action="filter-weather-chip" data-weather="ambos">🔄 Ambos</button>
+          </div>
+          <!-- Categoria Chips -->
           <div class="cat-chips-scroll" id="catChipsContainer">
             <!-- Dynamic categories -->
           </div>
@@ -1023,8 +1144,24 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
 
       <!-- ================= TAB 2: MONTAR LOOK ================= -->
       <section id="tab-suggest" class="tab-content">
+        <!-- Modo Não sei o que usar (Zero Fricção) -->
+        <div style="margin-bottom: 14px;">
+          <button class="btn-hero-fast" data-action="quick-fast-look">
+            <span>🤷</span>
+            <span>Não sei o que usar</span>
+            <span style="font-size: 0.75rem; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 8px;">1 clique ⚡</span>
+          </button>
+        </div>
+
+        <div id="fastLookReasonContainer"></div>
+
         <div class="generator-panel">
-          <div style="font-size: 1rem; font-weight: 700; color: #fff;">🪄 Assistente Inteligente</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <div style="font-size: 1rem; font-weight: 700; color: #fff;">🪄 Assistente Inteligente</div>
+            <div class="season-info-bar" id="seasonInfoBar">
+              <!-- Detectado via JS -->
+            </div>
+          </div>
           <p style="margin: 0; font-size: 0.82rem; color: var(--text-muted);">
             Escolha o momento e o clima. Nosso algoritmo analisa contraste harmônico, cores neutras e análogas para sugerir o visual perfeito.
           </p>
@@ -1210,9 +1347,20 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         <div class="form-group">
           <label class="form-label" for="pieceWeather">Adequação ao Clima</label>
           <select id="pieceWeather" class="form-select">
-            <option value="ambos">Ambos (Meia estação / Todo o ano)</option>
-            <option value="calor">Calor / Verão</option>
-            <option value="frio">Frio / Inverno</option>
+            <option value="ambos">Ambos (Meia estação / Todo o ano) 🔄</option>
+            <option value="calor">Calor / Verão 🔥</option>
+            <option value="frio">Frio / Inverno ❄️</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Status Disponível / Lavanderia -->
+      <div class="generator-grid">
+        <div class="form-group">
+          <label class="form-label" for="pieceStatus">Status da Peça</label>
+          <select id="pieceStatus" class="form-select">
+            <option value="disponivel">✅ Disponível para vestir</option>
+            <option value="lavanderia">🧺 Na lavanderia / Para lavar</option>
           </select>
         </div>
       </div>
@@ -1375,6 +1523,9 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         occasions: ['encontro', 'jantar/restaurante', 'rolê com amigas'],
         photoUrl: 'https://generated-images.adapta.one/pcp1%40mrinox.com.br/01a0ea37-06ee-7000-ad6e-f8a0d9ae9793/2026-09-28T23-31-10-758Z_Original_user_intent_3D_render_of_an_elegant_midi.png',
         isDemo: true,
+        status: 'disponivel',
+        useCount: 0,
+        lastUsed: null,
         createdAt: 1
       },
       {
@@ -1387,6 +1538,9 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         occasions: ['festa', 'social/formal', 'formatura/evento', 'jantar/restaurante'],
         photoUrl: 'https://generated-images.adapta.one/pcp1%40mrinox.com.br/01a0ea37-06ee-7000-ad6e-f8a0d9ae9793/2026-09-28T23-31-10-671Z_Original_user_intent_3D_render_of_an_elegant_long.png',
         isDemo: true,
+        status: 'disponivel',
+        useCount: 0,
+        lastUsed: null,
         createdAt: 2
       },
       {
@@ -1399,6 +1553,9 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         occasions: ['trabalho', 'lazer', 'viagem', 'rolê com amigas'],
         photoUrl: 'https://generated-images.adapta.one/pcp1%40mrinox.com.br/01a0ea37-06ee-7000-ad6e-f8a0d9ae9793/2026-09-28T23-31-10-637Z_Original_user_intent_3D_render_of_an_off_white_cr.png',
         isDemo: true,
+        status: 'disponivel',
+        useCount: 0,
+        lastUsed: null,
         createdAt: 3
       },
       {
@@ -1411,6 +1568,9 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         occasions: ['trabalho', 'lazer', 'viagem', 'rolê com amigas'],
         photoUrl: 'https://generated-images.adapta.one/pcp1%40mrinox.com.br/01a0ea37-06ee-7000-ad6e-f8a0d9ae9793/2026-09-28T23-31-10-851Z_Original_user_intent_3D_render_of_a_light_blue_ov.png',
         isDemo: true,
+        status: 'disponivel',
+        useCount: 0,
+        lastUsed: null,
         createdAt: 4
       },
       {
@@ -1423,21 +1583,88 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         occasions: ['trabalho', 'social/formal', 'jantar/restaurante'],
         photoUrl: 'https://generated-images.adapta.one/pcp1%40mrinox.com.br/01a0ea37-06ee-7000-ad6e-f8a0d9ae9793/2026-09-28T23-31-10-928Z_Original_user_intent_3D_render_of_beige_high_wais.png',
         isDemo: true,
+        status: 'disponivel',
+        useCount: 0,
+        lastUsed: null,
         createdAt: 5
+      },
+      {
+        id: 'demo-6',
+        name: 'Scarpin nude',
+        category: 'Calçados',
+        color: 'nude/rosé',
+        style: 'Elegante',
+        weather: 'ambos',
+        occasions: ['trabalho', 'social/formal', 'jantar/restaurante', 'formatura/evento'],
+        photoUrl: 'https://generated-images.adapta.one/pcp1%40mrinox.com.br/01a0ea37-06ee-7000-ad6e-f8a0d9ae9793/2026-09-29T00-21-35-219Z_Original_user_intent_3D_render_of_a_nude_beige_po.png',
+        isDemo: true,
+        status: 'disponivel',
+        useCount: 0,
+        lastUsed: null,
+        createdAt: 6
+      },
+      {
+        id: 'demo-7',
+        name: 'Tênis branco',
+        category: 'Calçados',
+        color: 'branco',
+        style: 'Casual',
+        weather: 'ambos',
+        occasions: ['lazer', 'treino', 'viagem', 'rolê com amigas'],
+        photoUrl: 'https://generated-images.adapta.one/pcp1%40mrinox.com.br/01a0ea37-06ee-7000-ad6e-f8a0d9ae9793/2026-09-29T00-21-36-509Z_Original_user_intent_3D_render_of_a_white_minimal.png',
+        isDemo: true,
+        status: 'disponivel',
+        useCount: 0,
+        lastUsed: null,
+        createdAt: 7
+      },
+      {
+        id: 'demo-8',
+        name: 'Bolsa vinho estruturada',
+        category: 'Acessórios',
+        color: 'vinho/bordô',
+        style: 'Elegante',
+        weather: 'ambos',
+        occasions: ['trabalho', 'social/formal', 'jantar/restaurante'],
+        photoUrl: 'https://generated-images.adapta.one/pcp1%40mrinox.com.br/01a0ea37-06ee-7000-ad6e-f8a0d9ae9793/2026-09-29T00-21-35-644Z_Original_user_intent_3D_render_of_a_structured_bu.png',
+        isDemo: true,
+        status: 'disponivel',
+        useCount: 0,
+        lastUsed: null,
+        createdAt: 8
+      },
+      {
+        id: 'demo-9',
+        name: 'Colar dourado delicado',
+        category: 'Acessórios',
+        color: 'dourado',
+        style: 'Romântico',
+        weather: 'ambos',
+        occasions: ['encontro', 'jantar/restaurante', 'festa'],
+        photoUrl: 'https://generated-images.adapta.one/pcp1%40mrinox.com.br/01a0ea37-06ee-7000-ad6e-f8a0d9ae9793/2026-09-29T00-21-35-384Z_Original_user_intent_3D_render_of_a_delicate_gold.png',
+        isDemo: true,
+        status: 'disponivel',
+        useCount: 0,
+        lastUsed: null,
+        createdAt: 9
       }
     ];
+
+    const DEMOS_V2_KEY = 'meus_looks_demos_v2_applied';
 
     let state = {
       pieces: [],
       favorites: [],
       selectedCategoryFilter: 'Todas',
+      selectedWeatherFilter: 'Tudo',
       searchTerm: '',
       activeTab: 'tab-wardrobe',
       processedImageBlob: null,
       rawOriginalImage: null,
       usingOriginalImage: false,
       currentGeneratedLooks: [],
-      shownCombosSignature: new Set()
+      shownCombosSignature: new Set(),
+      currentSeasonInfo: null
     };
 
     // --- NOTIFICAÇÃO TOAST ---
@@ -1460,22 +1687,95 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       }
     }
 
+    // --- DETECÇÃO AUTOMÁTICA DE ESTAÇÃO (HEMISFÉRIO SUL) ---
+    function detectSouthernSeason() {
+      const now = new Date();
+      const month = now.getMonth() + 1; // 1 to 12
+      const day = now.getDate();
+
+      // Transições aproximadas no Hemisfério Sul:
+      // Outono: 21 de março a 20 de junho
+      // Inverno: 21 de junho a 22 de setembro
+      // Primavera: 23 de setembro a 20 de dezembro
+      // Verão: 21 de dezembro a 20 de março
+      let season = 'outono';
+      let suggestedWeather = 'ambos';
+      let icon = '🍂';
+
+      if ((month === 12 && day >= 21) || month === 1 || month === 2 || (month === 3 && day < 21)) {
+        season = 'verão';
+        suggestedWeather = 'calor';
+        icon = '☀️';
+      } else if ((month === 3 && day >= 21) || month === 4 || month === 5 || (month === 6 && day < 21)) {
+        season = 'outono';
+        suggestedWeather = 'ambos';
+        icon = '🍂';
+      } else if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 23)) {
+        season = 'inverno';
+        suggestedWeather = 'frio';
+        icon = '❄️';
+      } else {
+        season = 'primavera';
+        suggestedWeather = 'ambos';
+        icon = '🌸';
+      }
+
+      state.currentSeasonInfo = { season, suggestedWeather, icon };
+      return state.currentSeasonInfo;
+    }
+
+    function applySeasonDefaultToInputs() {
+      const info = state.currentSeasonInfo || detectSouthernSeason();
+      const weatherSelect = document.getElementById('filterWeather');
+      if (weatherSelect) {
+        weatherSelect.value = info.suggestedWeather;
+      }
+
+      const bar = document.getElementById('seasonInfoBar');
+      if (bar) {
+        const weatherLabel = info.suggestedWeather === 'calor' ? 'calor' : (info.suggestedWeather === 'frio' ? 'frio' : 'meia estação');
+        bar.innerHTML = `${info.icon} Estação: <strong>${info.season}</strong> — clima sugerido (${weatherLabel}) aplicado`;
+      }
+    }
+
     // --- CARREGAMENTO INICIAL TOLERANTE ---
     function loadInitialData() {
+      detectSouthernSeason();
+
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            state.pieces = parsed;
+            // Normalizar peças antigas com campos status e usos
+            state.pieces = parsed.map(p => ({
+              status: 'disponivel',
+              useCount: 0,
+              lastUsed: null,
+              ...p
+            }));
+
+            // Adicionar as 4 novas demos apenas se faltarem e flag ainda não aplicada
+            const demosAddedFlag = localStorage.getItem(DEMOS_V2_KEY);
+            if (!demosAddedFlag) {
+              const existingIds = new Set(state.pieces.map(p => p.id));
+              const missingDemos = DEMO_ITEMS.slice(5).filter(d => !existingIds.has(d.id));
+              if (missingDemos.length > 0) {
+                state.pieces.push(...missingDemos);
+                savePieces();
+              }
+              localStorage.setItem(DEMOS_V2_KEY, 'true');
+            }
           } else {
             state.pieces = [...DEMO_ITEMS];
             savePieces();
+            localStorage.setItem(DEMOS_V2_KEY, 'true');
             showWelcomeToast();
           }
         } else {
           state.pieces = [...DEMO_ITEMS];
           savePieces();
+          localStorage.setItem(DEMOS_V2_KEY, 'true');
           showWelcomeToast();
         }
       } catch (e) {
@@ -1609,7 +1909,22 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
           return matchCat && matchSearch;
         });
 
+        // Filtro adicional por clima/estação
+        if (state.selectedWeatherFilter && state.selectedWeatherFilter !== 'Tudo') {
+          filtered = filtered.filter(p => {
+            const w = p.weather || 'ambos';
+            if (state.selectedWeatherFilter === 'ambos') return w === 'ambos';
+            return w === state.selectedWeatherFilter || w === 'ambos';
+          });
+        }
+
+        const laundryCount = state.pieces.filter(p => p.status === 'lavanderia').length;
         countLabel.textContent = `👗 ${state.pieces.length} ${state.pieces.length === 1 ? 'peça salva' : 'peças salvas'}`;
+        
+        const laundryCountBadge = document.getElementById('laundryCountBadge');
+        if (laundryCountBadge) {
+          laundryCountBadge.textContent = laundryCount > 0 ? `🧺 ${laundryCount} na lavanderia` : '';
+        }
 
         if (filtered.length === 0) {
           grid.innerHTML = `
@@ -1630,8 +1945,25 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
           const demoBadge = p.isDemo ? `<span class="badge-demo">Demo</span>` : '';
           const photo = p.photoUrl || 'https://img.usecurling.com/p/200/200?q=fashion%20clothing&color=purple';
 
+          const isLaundry = (p.status === 'lavanderia');
+          const statusBadge = isLaundry
+            ? `<button class="badge-status laundry" data-action="toggle-status" data-id="${p.id}" title="Clique para marcar como Disponível">🧺 Na lavanderia</button>`
+            : `<button class="badge-status available" data-action="toggle-status" data-id="${p.id}" title="Clique para enviar à Lavanderia">✅ Disponível</button>`;
+
+          let usageText = '';
+          if (p.useCount && p.useCount > 0) {
+            let dateStr = '';
+            if (p.lastUsed) {
+              const d = new Date(p.lastUsed);
+              const day = String(d.getDate()).padStart(2, '0');
+              const mon = String(d.getMonth() + 1).padStart(2, '0');
+              dateStr = ` · última em ${day}/${mon}`;
+            }
+            usageText = `<div class="piece-usage-info">✨ usada ${p.useCount}x${dateStr}</div>`;
+          }
+
           return `
-            <div class="piece-card" data-id="${p.id}">
+            <div class="piece-card ${isLaundry ? 'is-laundry' : ''}" data-id="${p.id}">
               <div class="piece-thumb-wrap">
                 <img class="piece-thumb" src="${photo}" alt="${safeName}" loading="lazy" onerror="this.onerror=null;this.src='https://img.usecurling.com/p/200/200?q=clothes&color=purple';">
                 ${demoBadge}
@@ -1642,6 +1974,10 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
                 <div class="piece-meta-row">
                   <span class="tag-chip" style="text-transform: capitalize;">${safeColor}</span>
                   <span class="tag-chip">${safeStyle}</span>
+                </div>
+                ${usageText}
+                <div style="margin-top: 2px;">
+                  ${statusBadge}
                 </div>
                 <div class="piece-actions">
                   <button class="piece-btn" data-action="edit-piece" data-id="${p.id}" title="Editar">
@@ -1705,7 +2041,10 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
                 <button class="btn-glow" data-action="use-today" data-fav-id="${fav.id}" style="padding: 7px 14px; font-size: 0.82rem;">
                   Usar hoje 💃
                 </button>
-                <button class="btn-icon" data-action="delete-favorite" data-fav-id="${fav.id}" title="Excluir Favorito">
+                <button class="btn-outline-purple" data-action="share-favorite-look" data-fav-id="${fav.id}" style="padding: 7px 12px; font-size: 0.82rem;">
+                  📤 Compartilhar
+                </button>
+                <button class="btn-icon" data-action="delete-favorite" data-fav-id="${fav.id}" title="Excluir Favorito" style="margin-left: auto;">
                   🗑️
                 </button>
               </div>
@@ -1800,6 +2139,15 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       const maxCount = Math.max(...Object.values(styleCounts), 0);
       if (maxCount >= 2) score += 7;
 
+      // REGRA DE USO: Leve preferência para peças MENOS usadas (variação de looks)
+      let usagePenalty = 0;
+      pieces.forEach(p => {
+        const u = p.useCount || 0;
+        if (u === 0) score += 2; // bônus para estrear ou variar peças paradas
+        else usagePenalty += Math.min(6, u * 1.5);
+      });
+      score -= Math.min(10, Math.floor(usagePenalty / pieces.length));
+
       // Normalização entre 50% e 99%
       return Math.min(99, Math.max(52, score));
     }
@@ -1823,12 +2171,15 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
 
     function generateCandidateLooks(targetOccasion, targetWeather, ignoreFilters = false) {
       const candidates = [];
-      const dresses = state.pieces.filter(p => p.category === 'Vestidos');
-      const tops = state.pieces.filter(p => p.category === 'Topos');
-      const bottoms = state.pieces.filter(p => p.category === 'Baixos');
-      const shoes = state.pieces.filter(p => p.category === 'Calçados');
-      const coats = state.pieces.filter(p => p.category === 'Casacos');
-      const accessories = state.pieces.filter(p => p.category === 'Acessórios');
+      // Peças na lavanderia são AUTOMATICAMENTE ignoradas pelo motor
+      const availablePieces = state.pieces.filter(p => p.status !== 'lavanderia');
+
+      const dresses = availablePieces.filter(p => p.category === 'Vestidos');
+      const tops = availablePieces.filter(p => p.category === 'Topos');
+      const bottoms = availablePieces.filter(p => p.category === 'Baixos');
+      const shoes = availablePieces.filter(p => p.category === 'Calçados');
+      const coats = availablePieces.filter(p => p.category === 'Casacos');
+      const accessories = availablePieces.filter(p => p.category === 'Acessórios');
 
       function filterPool(list) {
         if (ignoreFilters) return list;
@@ -1945,10 +2296,13 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
               ${slotsHtml}
             </div>
             <div class="look-footer">
-              <span style="font-size: 0.75rem; color: var(--text-muted);">
+              <span style="font-size: 0.75rem; color: var(--text-muted); flex: 1;">
                 ${lookObj.pieces.map(p => escapeHtml(p.name)).join(' + ')}
               </span>
-              <button class="btn-glow" data-action="save-look-favorite" data-look-idx="${idx}" style="padding: 6px 14px; font-size: 0.8rem; white-space: nowrap;">
+              <button class="btn-outline-purple" data-action="share-suggested-look" data-look-idx="${idx}" style="padding: 6px 10px; font-size: 0.8rem; white-space: nowrap;">
+                📤 Compartilhar
+              </button>
+              <button class="btn-glow" data-action="save-look-favorite" data-look-idx="${idx}" style="padding: 6px 12px; font-size: 0.8rem; white-space: nowrap;">
                 ${isFav ? '💜 Salvo!' : '💜 Salvar favorito'}
               </button>
             </div>
@@ -2076,6 +2430,77 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       showToast('Look pronto pra arrasar! 💃');
     }
 
+    // --- MODO "NÃO SEI O QUE USAR" (ZERO FRICÇÃO) ---
+    function runFastDecision(isNext = false) {
+      const now = new Date();
+      const day = now.getDay(); // 0 = Dom, 1 = Seg... 6 = Sab
+      const hour = now.getHours();
+
+      // Detectar estação e clima sugerido
+      const seasonInfo = state.currentSeasonInfo || detectSouthernSeason();
+      const detectedWeather = seasonInfo.suggestedWeather;
+
+      // Selecionar ocasião provável pelo dia da semana e bloco de horário
+      let probableOccasion = 'lazer';
+      let dayName = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'][day];
+      let timeBlock = 'à tarde';
+
+      if (hour < 12) timeBlock = 'de manhã';
+      else if (hour < 18) timeBlock = 'à tarde';
+      else timeBlock = 'à noite';
+
+      const isWeekday = (day >= 1 && day <= 5);
+
+      if (isWeekday) {
+        if (hour >= 6 && hour < 18) {
+          probableOccasion = 'trabalho';
+        } else if (day === 5 && hour >= 18) {
+          probableOccasion = 'festa';
+        } else {
+          probableOccasion = 'jantar/restaurante';
+        }
+      } else {
+        // Fim de semana
+        if (day === 6 && hour >= 18) {
+          probableOccasion = 'festa';
+        } else if (day === 0 && hour >= 18) {
+          probableOccasion = 'jantar/restaurante';
+        } else if (hour >= 11 && hour < 17) {
+          probableOccasion = 'rolê com amigas';
+        } else {
+          probableOccasion = 'lazer';
+        }
+      }
+
+      // Sincronizar os selects de Montar Look
+      const occSelect = document.getElementById('filterOccasion');
+      const weaSelect = document.getElementById('filterWeather');
+      if (occSelect) occSelect.value = probableOccasion;
+      if (weaSelect) weaSelect.value = detectedWeather;
+
+      // Banner explicativo com botão "Trocar"
+      const reasonBox = document.getElementById('fastLookReasonContainer');
+      const weatherName = detectedWeather === 'calor' ? 'calor' : (detectedWeather === 'frio' ? 'frio' : 'meia estação');
+      const occNice = OCCASION_ICONS[probableOccasion] || probableOccasion;
+
+      if (reasonBox) {
+        reasonBox.innerHTML = `
+          <div class="fast-reason-banner">
+            <div>
+              <span>⚡</span> <strong>Sugestão Instantânea:</strong> ${dayName} ${timeBlock} + ${weatherName} → <strong>${occNice}</strong>
+            </div>
+            <button class="btn-outline-purple" data-action="quick-fast-look-next" style="padding: 5px 10px; font-size: 0.78rem;">
+              Trocar 🔀
+            </button>
+          </div>
+        `;
+      }
+
+      // Gerar look
+      runSuggestLooks(isNext);
+      showToast(`Look sugerido para ${dayName} ${timeBlock}! ✨`);
+    }
+
     // --- FORMULÁRIO DE PEÇA ---
     function openPieceModal(pieceToEdit = null) {
       const modal = document.getElementById('modalPieceForm');
@@ -2086,6 +2511,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       const colorInput = document.getElementById('pieceColor');
       const styleInput = document.getElementById('pieceStyle');
       const weatherInput = document.getElementById('pieceWeather');
+      const statusInput = document.getElementById('pieceStatus');
       const urlInput = document.getElementById('pieceUrlInput');
       const fileInput = document.getElementById('pieceFileInput');
 
@@ -2106,6 +2532,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         colorInput.value = pieceToEdit.color || 'preto';
         styleInput.value = pieceToEdit.style || 'Casual';
         weatherInput.value = pieceToEdit.weather || 'ambos';
+        if (statusInput) statusInput.value = pieceToEdit.status || 'disponivel';
         urlInput.value = pieceToEdit.photoUrl || '';
         updatePhotoPreview(pieceToEdit.photoUrl || '');
 
@@ -2123,6 +2550,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         colorInput.value = 'preto';
         styleInput.value = 'Casual';
         weatherInput.value = 'ambos';
+        if (statusInput) statusInput.value = 'disponivel';
         urlInput.value = '';
         updatePhotoPreview('');
       }
@@ -2147,6 +2575,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         const color = document.getElementById('pieceColor').value;
         const style = document.getElementById('pieceStyle').value;
         const weather = document.getElementById('pieceWeather').value;
+        const status = document.getElementById('pieceStatus')?.value || 'disponivel';
         const customUrl = document.getElementById('pieceUrlInput').value.trim();
 
         if (!name) {
@@ -2182,6 +2611,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
               color,
               style,
               weather,
+              status,
               occasions: selectedOccasions,
               photoUrl: finalPhoto,
               updatedAt: Date.now()
@@ -2197,6 +2627,9 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
             color,
             style,
             weather,
+            status,
+            useCount: 0,
+            lastUsed: null,
             occasions: selectedOccasions,
             photoUrl: finalPhoto,
             isDemo: false,
@@ -2223,6 +2656,181 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       renderWardrobe();
       checkMissingWardrobeTips();
       showToast('Peça removida.');
+    }
+
+    function togglePieceStatus(id) {
+      const piece = state.pieces.find(p => p.id === id);
+      if (!piece) return;
+      piece.status = (piece.status === 'lavanderia') ? 'disponivel' : 'lavanderia';
+      savePieces();
+      renderWardrobe();
+      if (piece.status === 'lavanderia') {
+        showToast(`🧺 "${piece.name}" movida para a lavanderia (não entrará nos looks).`);
+      } else {
+        showToast(`✅ "${piece.name}" está pronta e disponível para usar!`);
+      }
+    }
+
+    function recordPieceUsage(pieceIds) {
+      if (!pieceIds || !pieceIds.length) return;
+      const now = Date.now();
+      let updated = false;
+
+      state.pieces.forEach(p => {
+        if (pieceIds.includes(p.id)) {
+          p.useCount = (p.useCount || 0) + 1;
+          p.lastUsed = now;
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        savePieces();
+        renderWardrobe();
+      }
+    }
+
+    // --- COMPARTILHAMENTO DE LOOK (CANVAS OFFLINE + WEBSHARE) ---
+    async function shareLookCard(lookObj) {
+      if (!lookObj || !lookObj.pieces || lookObj.pieces.length === 0) return;
+
+      showToast('Gerando imagem do look... 🎨');
+
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = 640;
+        const pieceCount = lookObj.pieces.length;
+        const rowHeight = 220;
+        const height = 180 + rowHeight + 110;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Fundo com degradê roxo escuro
+        const grad = ctx.createLinearGradient(0, 0, width, height);
+        grad.addColorStop(0, '#1c102e');
+        grad.addColorStop(0.5, '#120f24');
+        grad.addColorStop(1, '#0a0a0f');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        // Moldura sutil
+        ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(12, 12, width - 24, height - 24);
+
+        // Título e Header
+        ctx.font = 'bold 26px sans-serif';
+        ctx.fillStyle = '#f3f4f6';
+        ctx.fillText(lookObj.title || 'Meus Looks 💫', 32, 54);
+
+        ctx.font = '15px sans-serif';
+        ctx.fillStyle = '#c084fc';
+        const subtitle = `${lookObj.dominantStyle || 'Elegante'} • ${lookObj.occasion || 'Especial'} (${lookObj.weather || 'clima'}) • Harmonia ${lookObj.score}%`;
+        ctx.fillText(subtitle, 32, 84);
+
+        // Carregar imagens das peças
+        const slotWidth = Math.floor((width - 64 - (pieceCount - 1) * 12) / pieceCount);
+        const startY = 110;
+
+        for (let i = 0; i < pieceCount; i++) {
+          const piece = lookObj.pieces[i];
+          const x = 32 + i * (slotWidth + 12);
+
+          // Card fundo
+          ctx.fillStyle = '#181729';
+          ctx.strokeStyle = 'rgba(168, 85, 247, 0.25)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(x, startY, slotWidth, rowHeight, 10);
+          ctx.fill();
+          ctx.stroke();
+
+          // Desenhar imagem se possível
+          if (piece.photoUrl) {
+            try {
+              const img = await new Promise((resolve, reject) => {
+                const el = new Image();
+                el.crossOrigin = 'anonymous';
+                el.onload = () => resolve(el);
+                el.onerror = () => resolve(null);
+                el.src = piece.photoUrl;
+              });
+
+              if (img) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.roundRect(x + 4, startY + 4, slotWidth - 8, rowHeight - 48, 8);
+                ctx.clip();
+                const minSide = Math.min(img.width, img.height);
+                const sx = (img.width - minSide) / 2;
+                const sy = (img.height - minSide) / 2;
+                ctx.drawImage(img, sx, sy, minSide, minSide, x + 4, startY + 4, slotWidth - 8, rowHeight - 48);
+                ctx.restore();
+              }
+            } catch (err) {
+              // fallback
+            }
+          }
+
+          // Nome da peça
+          ctx.fillStyle = '#f3f4f6';
+          ctx.font = 'bold 12px sans-serif';
+          const truncatedName = piece.name && piece.name.length > 18 ? piece.name.slice(0, 16) + '...' : (piece.name || '');
+          ctx.fillText(truncatedName, x + 8, startY + rowHeight - 26);
+
+          ctx.fillStyle = '#a855f7';
+          ctx.font = '10px sans-serif';
+          ctx.fillText(piece.category || '', x + 8, startY + rowHeight - 10);
+        }
+
+        // Rodapé
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '13px sans-serif';
+        ctx.fillText('Criado no app Meus Looks 💫 • monte com suas peças', 32, height - 32);
+
+        // Compartilhar via WebShare ou download
+        canvas.toBlob(async blob => {
+          if (!blob) {
+            showToast('Erro ao renderizar imagem.');
+            return;
+          }
+
+          const file = new File([blob], `look-${Date.now()}.png`, { type: 'image/png' });
+
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: 'Meu Look 💫',
+                text: `Olha essa combinação que montei no Meus Looks! ✨ (${lookObj.score}% harmonia)`,
+                files: [file]
+              });
+              showToast('Look compartilhado com sucesso! 📤');
+              return;
+            } catch (err) {
+              if (err.name !== 'AbortError') {
+                console.warn('Erro no WebShare:', err);
+              }
+            }
+          }
+
+          // Fallback download direto
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `meu-look-${Date.now()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast('Imagem do look baixada! 📤');
+        }, 'image/png');
+
+      } catch (e) {
+        console.error('Erro ao compartilhar:', e);
+        showToast('Não foi possível gerar a imagem.');
+      }
     }
 
     // --- EVENT DELEGATION ROBUSTO (SEM BOTÕES QUEBRADOS) ---
@@ -2417,16 +3025,68 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
             state.favorites.unshift(newFav);
             saveFavorites();
             renderFavorites();
+
+            // Computar uso das peças ao salvar nos favoritos
+            recordPieceUsage(lookObj.pieces.map(p => p.id));
+
             target.textContent = '💜 Salvo!';
             showToast('Salvo nos favoritos! 💜');
+            break;
+          }
+
+          case 'toggle-status': {
+            const id = target.getAttribute('data-id');
+            if (id) togglePieceStatus(id);
+            break;
+          }
+
+          case 'filter-weather-chip': {
+            const w = target.getAttribute('data-weather');
+            if (w) {
+              state.selectedWeatherFilter = w;
+              document.querySelectorAll('#weatherChipsContainer .cat-chip').forEach(c => {
+                c.classList.toggle('active', c.getAttribute('data-weather') === w);
+              });
+              renderWardrobe();
+            }
+            break;
+          }
+
+          case 'quick-fast-look': {
+            runFastDecision(false);
+            break;
+          }
+
+          case 'quick-fast-look-next': {
+            runFastDecision(true);
+            break;
+          }
+
+          case 'share-suggested-look': {
+            const idx = parseInt(target.getAttribute('data-look-idx'), 10);
+            const lookObj = state.currentGeneratedLooks[idx];
+            if (lookObj) {
+              shareLookCard(lookObj);
+            }
+            break;
+          }
+
+          case 'share-favorite-look': {
+            const favId = target.getAttribute('data-fav-id');
+            const fav = state.favorites.find(f => f.id === favId);
+            if (fav) {
+              shareLookCard(fav);
+            }
             break;
           }
 
           case 'use-today': {
             const favId = target.getAttribute('data-fav-id');
             const fav = state.favorites.find(f => f.id === favId);
-            if (fav) {
-              showToast(`Look pronto pra arrasar! 💃`);
+            if (fav && Array.isArray(fav.pieces)) {
+              const pieceIds = fav.pieces.map(p => p.id);
+              recordPieceUsage(pieceIds);
+              showToast(`Look pronto pra arrasar hoje! 💃 Uso computado nas peças.`);
             }
             break;
           }
@@ -2522,6 +3182,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       initDynamicManifest();
       initSplash();
       loadInitialData();
+      applySeasonDefaultToInputs();
       renderCategoryChips();
       renderWardrobe();
       renderFavorites();
